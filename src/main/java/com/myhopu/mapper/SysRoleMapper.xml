@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.SysRoleMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="roleid" resultType="long" order="BEFORE">
+			select oracle_sequence.nextval from dual
+		</selectKey>
+		insert into sys_role
+		values(#{roleid},#{rolename})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from sys_role where roleid = #{roleid}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update sys_role
+		<set>
+			<if test="rolename != null">rolename=#{rolename},</if>
+		</set>
+		where roleid = #{roleid}
+	</update>
+
+	<!-- 查一个或查所有 -->
+	<select id="findAll" resultType="SysRole">
+		select * from sys_role r
+		<where>
+			<if test="roleid != -1">and r.roleid=#{roleid}</if>
+		</where>
+	</select>
+
+
+	<!-- 查所有，未关联指定角色的部门用户 -->
+	<select id="findAllDeptUser" resultType="java.util.Map">
+		select d.did as id, dpid
+		as parentId, dname as name from sys_dept d
+		union select userid as id,
+		did as parentId, realname as name from sys_user where userid not in
+		(select userid from sys_role_rel_user where roleid = #{roleid})
+	</select>
+
+	<!-- 关联角色与用户 -->
+	<insert id="add2">
+		insert into sys_role_rel_user
+		select oracle_sequence.nextval,
+		#{roleid}, userid from sys_user where userid in
+		<foreach item="item" index="index" collection="userids" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</insert>
+
+	<!-- 查询角色关联的用户 -->
+	<select id="findAll2" resultType="java.util.Map">
+		select
+		rru.ruid,u.*,d.did,d.dname from
+		sys_user u,sys_dept d,sys_role_rel_user
+		rru
+		where u.did = d.did and
+		u.userid = rru.userid and rru.roleid =
+		#{roleid}
+	</select>
+
+	<!-- 删，解除角色所关联的用户 -->
+	<delete id="del2">
+		delete from sys_role_rel_user where ruid = #{ruid}
+	</delete>
+
+
+	<!-- 查所有，未关联指定角色的模块 -->
+	<select id="findAllModule" resultType="java.util.Map">
+		select mid as id, mpid as
+		parentId, mname as name
+		from sys_module
+		where mpath is null
+		union
+		select
+		mid as id, mpid as parentId, mname as name
+		from sys_module
+		where mid not
+		in
+		(select mid from sys_role_rel_module where roleid = #{roleid})
+	</select>
+
+	<!-- 关联角色与模块 -->
+	<insert id="add3">
+		insert into sys_role_rel_module
+		select oracle_sequence.nextval,
+		#{roleid}, mid from sys_module where mpath is not null and mid in
+		<foreach item="item" index="index" collection="mids" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</insert>
+
+	<!-- 查询角色关联的模块 -->
+	<select id="findAll3" resultType="java.util.Map">
+		select
+		rrm.rmid,m.mid,m.mname
+		from
+		sys_module m,sys_role_rel_module
+		rrm
+		where m.mid = rrm.mid and
+		rrm.roleid = #{roleid}
+	</select>
+
+	<!-- 删，解除角色所关联的模块 -->
+	<delete id="del3">
+		delete from sys_role_rel_module where rmid = #{rmid}
+	</delete>
+
+</mapper>

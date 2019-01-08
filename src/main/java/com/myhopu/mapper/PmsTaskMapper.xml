@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.PmsTaskMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="tid" resultType="long" order="BEFORE">
+			select
+			oracle_sequence.nextval from dual
+		</selectKey>
+		insert into pms_task
+		values(#{tid},#{pmsProject.pid},#{sysUser.userid},#{tname},#{tdate1},#{tworkday},#{tdate2},#{tresponse},#{tremark},#{tsortkey})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from pms_task where tid = #{tid}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update pms_task
+		<set>
+			<if test="sysUser != null and sysUser.userid != null">userid=#{sysUser.userid},</if>
+			<if test="tname != null">tname=#{tname},</if>
+			<if test="tdate1 != null">tdate1=#{tdate1},</if>
+			<if test="tworkday != null">tworkday=#{tworkday},</if>
+			<if test="tdate2 != null">tdate2=#{tdate2},</if>
+			<if test="tresponse != null">tresponse=#{tresponse},</if>
+			<if test="tremark != null">tremark=#{tremark},</if>
+			<if test="tsortkey != -1">tsortkey=#{tsortkey}</if>
+		</set>
+		where tid = #{tid}
+	</update>
+
+	<!-- 查一个 -->
+	<select id="findOne" resultType="PmsTask">
+		select t.*, p.pid, p.pname,
+		u.userid, u.realname
+		from pms_task t, pms_project p, sys_user u
+		where
+		t.pid = p.pid
+		and t.userid = u.userid
+		and tid=#{tid}
+	</select>
+
+	<!-- 查所有 -->
+	<select id="findAll" resultMap="taskResultMap">
+		select t.*, p.pid, p.pname,
+		u.userid, u.realname
+		from pms_task t, pms_project p, sys_user u
+		where
+		t.pid = p.pid
+		and t.userid = u.userid
+		and t.pid = #{id}
+		order by t.tsortkey
+	</select>
+
+	<resultMap type="PmsTask" id="taskResultMap" autoMapping="true">
+		<association property="pmsProject" javaType="PmsProject" autoMapping="true"></association>
+		<association property="sysUser" javaType="SysUser" autoMapping="true">
+		</association>
+	</resultMap>
+
+</mapper>
+

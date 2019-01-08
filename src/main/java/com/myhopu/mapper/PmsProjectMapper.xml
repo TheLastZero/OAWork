@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.PmsProjectMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="pid" resultType="long" order="BEFORE">
+			select
+			oracle_sequence.nextval from dual
+		</selectKey>
+		insert into pms_project
+		values(#{pid},#{sysDept.did},#{pname},#{premark})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from pms_project where pid = #{pid}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update pms_project
+		<set>
+			<if test="pname != null">pname=#{pname},</if>
+			<if test="premark != null">premark=#{premark},</if>
+		</set>
+		where pid = #{pid}
+	</update>
+
+	<!-- 查一个 -->
+	<select id="findOne" resultType="PmsProject">
+		select
+		* from pms_project where
+		pid=#{pid}
+	</select>
+
+	<!-- 查所有 -->
+	<select id="findAll" resultMap="projectResultMap">
+		select p.*,d.did,dname from
+		pms_project p,sys_dept d where p.did = d.did
+	</select>
+
+	<resultMap type="PmsProject" id="projectResultMap"
+		autoMapping="true">
+		<association property="sysDept" javaType="SysDept"
+			autoMapping="true">
+		</association>
+	</resultMap>
+
+</mapper>
+

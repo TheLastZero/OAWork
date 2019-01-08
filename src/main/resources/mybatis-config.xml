@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>	
+	<!-- MyBatis的配置项 -->
+	<settings>
+		<!-- 设置是否启用缓存 -->
+		<setting name="cacheEnabled" value="true" />
+		<!-- 如果 null 被当作值来传递，对于所有可能为空的列，JDBC Type 是需要的。 -->
+		<setting name="jdbcTypeForNull" value="NULL"/>
+		<!-- 配置该项后可使用log4j2 -->
+		<setting name="logImpl" value="LOG4J2" />
+	</settings>
+</configuration>

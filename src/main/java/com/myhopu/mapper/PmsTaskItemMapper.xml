@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.PmsTaskItemMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="iid" resultType="long" order="BEFORE">
+			select
+			oracle_sequence.nextval from dual
+		</selectKey>
+		insert into pms_task_item
+		values(#{iid},#{pmsTask.tid},#{iname},#{irequirement},#{iscore},#{iscore2},#{isortkey})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from pms_task_item where iid = #{id}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update pms_task_item
+		<set>
+			<if test="iname != null">iname=#{iname},</if>
+			<if test="irequirement != null">irequirement=#{irequirement},</if>
+			<if test="iscore != -1">iscore=#{iscore},</if>
+			<if test="iscore2 != -1">iscore2=#{iscore2},</if>
+			<if test="isortkey != -1">isortkey=#{isortkey}</if>
+		</set>
+		where iid = #{iid}
+	</update>
+
+	<!-- 查一个 -->
+	<select id="findOne" resultType="PmsTaskItem">
+		select * from pms_task_item t
+		where t.iid=#{id}
+	</select>
+
+	<!-- 查所有 -->
+	<select id="findAll" resultMap="itemResultMap">
+		select * from pms_task_item t
+		where t.tid = #{id} order by t.isortkey
+	</select>
+
+	<!-- 查所有，我的任务 -->
+	<select id="findAllMy" resultMap="itemResultMap">
+		select * from pms_task_item ti,
+		pms_task t,pms_project p
+		where ti.tid =
+		t.tid and t.pid = p.pid and
+		t.userid=#{userid}
+		order by t.tsortkey,ti.isortkey
+	</select>
+
+	<resultMap type="PmsTaskItem" id="itemResultMap" autoMapping="true">
+		<association property="pmsTask" javaType="PmsTask"
+			autoMapping="true">
+			<association property="pmsProject" javaType="PmsProject"
+				autoMapping="true"></association>
+		</association>
+	</resultMap>
+
+</mapper>
+

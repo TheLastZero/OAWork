@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.PmsChatMapper">
+
+	<!-- 查所有，部门用户 -->
+	<select id="findAllDeptUser" resultType="java.util.Map">
+		select d.did as id, dpid
+		as parentId, dname as name from sys_dept d
+		union select userid as id,
+		did as parentId, realname as name from sys_user
+	</select>
+
+	<!-- 发送消息 -->
+	<insert id="sendMsg">
+		insert into RS_TONGXIN
+		select oracle_sequence.nextval, b.realname as
+		fasong_name,fasong_name_id,c.realname as
+		jieshou_name,jieshou_name_id,fasong_content,fasong_zhuangtai,fasong_time,fasong_type
+		from (select #{userid} as fasong_name_id,userid as
+		jieshou_name_id,#{chatMsg} as fasong_content,
+		'未读' as
+		fasong_zhuangtai,sysdate as fasong_time,'文本' as fasong_type from
+		sys_user where userid in
+		<foreach item="item" index="index" collection="chatReceiver"
+			open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		) a,sys_user b,sys_user c
+		where a.fasong_name_id = b.userid and
+		a.jieshou_name_id = c.userid
+	</insert>
+
+	<!-- 接收消息 -->
+	<!-- 包含两部分：我发给别人的消息，别人还没阅读的、别人发给我的，我还没有阅读的 -->
+	<!-- 一旦接收消息，就设为已读，接收完消息后会更新消息状态 -->
+	<select id="rcvMsg" resultType="java.util.Map">
+		select *
+		from (select t.fasong_id,
+		t.fasong_name,
+		t.fasong_name_id,
+		t.jieshou_name,
+		t.jieshou_name_id,
+		t.fasong_content,
+		t.fasong_zhuangtai,
+		t.fasong_time,
+		t.fasong_type,
+		to_char(t.fasong_time,
+		'yyyy-mm-dd
+		hh24:mi:ss') as time2
+		from RS_TONGXIN
+		t
+		where
+		t.fasong_name_id =
+		#{userid} and fasong_zhuangtai = '未读'
+		union
+		select
+		t.fasong_id,
+		t.fasong_name,
+		t.fasong_name_id,
+		t.jieshou_name,
+		t.jieshou_name_id,
+		t.fasong_content,
+		'已读' as fasong_zhuangtai,
+		t.fasong_time,
+		t.fasong_type,
+		to_char(t.fasong_time, 'yyyy-mm-dd
+		hh24:mi:ss') as time2
+		from RS_TONGXIN t
+		where t.jieshou_name_id =
+		#{userid} and fasong_zhuangtai = '未读')
+		order by
+		fasong_time
+	</select>
+
+	<!-- 查所有，未读消息 -->
+	<select id="getState" resultType="java.util.Map">
+		select
+		t.*,to_char(t.fasong_time,'yyyy-mm-dd hh24:mi:ss') as
+		time2 from
+		RS_TONGXIN t where t.jieshou_name_id = #{userid} and fasong_zhuangtai
+		= '未读'
+	</select>
+
+	<!-- 改变消息阅读状态（设为已读） -->
+	<update id="changeState">
+		update rs_tongxin set fasong_zhuangtai='已读' where
+		jieshou_name_id = #{userid}
+	</update>
+
+	<!-- 校验是否是用户 -->
+	<select id="checkIsUser" resultType="SysUser">
+		select * from sys_user where
+		userid = #{name}
+	</select>
+
+</mapper>
+

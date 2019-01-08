@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.SysModuleMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="mid" resultType="long" order="BEFORE">
+			select
+			oracle_sequence.nextval from dual
+		</selectKey>
+		insert into sys_module
+		values(#{mid},#{mpid},#{mname},#{mpath},#{msortkey})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from sys_module where mid = #{id}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update sys_module
+		<set>
+			<if test="mname != null">mname=#{mname},</if>
+			<if test="mpath != null">mpath=#{mpath},</if>
+			<if test="msortkey != -1">msortkey=#{msortkey}</if>
+		</set>
+		where mid = #{mid}
+	</update>
+
+	<!-- 查一个 -->
+	<select id="findOne" resultType="SysModule">
+		select
+		* from sys_module where
+		mid=#{mid}
+	</select>
+
+	<!-- 查所有，当前用户的授权模块 -->
+	<select id="findAllMy" resultType="SysModule">
+		select * from(select * from
+		sys_module where mpath is null union
+		select * from
+		sys_module where mid
+		in(select mid from
+		sys_role_rel_module
+		where
+		roleid in (select roleid
+		from
+		sys_role_rel_user where userid=#{userid})))
+		order by mpid,msortkey
+	</select>
+
+	<!-- 查所有 -->
+	<select id="findAll" resultType="SysModule">
+		select * from sys_module
+		<where>
+			<if test="mpid != -1">and mpid=#{mpid}</if>
+		</where>
+		order by mpid,msortkey
+	</select>
+
+</mapper>

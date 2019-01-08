@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.myhopu.mapper.SysUserMapper">
+
+	<!-- 增 -->
+	<insert id="add">
+		<selectKey keyProperty="userid" resultType="long" order="BEFORE">
+			select oracle_sequence.nextval from dual
+		</selectKey>
+		insert into sys_user(USERID,DID,USERNAME,USERPASS,REALNAME)
+		values(#{userid},#{sysDept.did},#{username},#{userpass},#{realname})
+	</insert>
+
+	<!-- 删 -->
+	<delete id="del">
+		delete from sys_user where userid = #{userid}
+	</delete>
+
+	<!-- 改 -->
+	<update id="upd">
+		update sys_user
+		<set>
+			<if test="username != null">username=#{username},</if>
+			<if test="userpass != null">userpass=#{userpass},</if>
+			<if test="realname != null">realname=#{realname}</if>
+		</set>
+		where userid = #{userid}
+	</update>
+
+	<!-- 查一个 -->
+	<select id="findOne" resultMap="userResultMap">
+		select s.*,d.* from sys_user s,sys_dept d
+		where
+		s.userid=#{userid}
+		and s.did=d.did
+	</select>
+
+	<!-- 查询所有考勤机号码不为空的用户，带着部门 -->
+	<select id="selectByCheckcode0WithDept" resultMap="userResultMap">
+		select s.*,d.* from sys_user s,sys_dept d
+		where s.CHECKCODE!=0
+		and s.did=d.did
+	</select>
+
+	<!-- 根据考勤机号码，查询用户 -->
+	<select id="selectByCheckcode" resultMap="userResultMap">
+		select * from sys_user where CHECKCODE=#{CHECKCODE}
+	</select>
+
+	<!-- 查所有 -->
+	<select id="findAll" resultMap="userResultMap">
+		select u.*,d.did,d.dname from
+		sys_user u,sys_dept d
+		where u.did = d.did
+		<if test="did != -1">and d.did=#{did}</if>
+	</select>
+
+	<resultMap type="SysUser" id="userResultMap" autoMapping="true">
+		<association property="sysDept" javaType="SysDept" autoMapping="true">
+		</association>
+	</resultMap>
+
+	<!-- 登录 -->
+	<select id="login" resultMap="userResultMap">
+		select u.*,d.did,d.dname from
+		sys_user u,sys_dept d where u.did = d.did and username=#{username} and
+		userpass=#{userpass}
+	</select>
+
+</mapper>
